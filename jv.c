@@ -49,11 +49,10 @@ void compile(char *classFile) {
 
 void createDir(char *fileName) {
     if (access(fileName, F_OK) == 0) {
-        int result;
         #ifdef _WIN32
-        result = mkdir(fileName);
+        mkdir(fileName);
         #else
-        result = mkdir(fileName, 0777);
+        mkdir(fileName, 0777);
         #endif
     }
 }
