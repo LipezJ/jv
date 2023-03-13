@@ -9,94 +9,123 @@
 #define SEPARATOR "/"
 #endif
 
-void compileJava(char** argv);
-void createDir(char *fileName);
+#define BUILDDIR "build"
+#define BINDIR "bin"
+
+#define COMPILE_CMD "javac -d %s -cp . src%s*.java src%s%s.java"
+#define EXECUTE_CMD "java -cp %s %s"
+#define JAR_CMD "jar cvfm %s%s%s.jar manifest.mf -C %s ."
+#define JAR_EXECUTE_CMD "java -jar %s%s%s.jar"
+
+void usage();
 void compile(char *classFile);
-void execute(char** argv);
+void compileJava(char* jarName, char* className);
+void execute(char* fileName);
+void executeJava(char* jarName);
 int createProject(char *projectName);
+void createDir(char *dirName);
+void createFile(char *command,char *content);
 
 int main(int argc, char** argv) {
     if (strcmp(argv[1], "--new") == 0 && argc == 3)
         createProject(argv[2]);
     else if (strcmp(argv[1], "-j") == 0 && argc == 4) 
-        compileJava(argv);
-    else if (strcmp(argv[1], "-c") == 0 && argc == 3) 
+        compileJava(argv[3], argv[2]);
+    else if (strcmp(argv[1], "-c") == 0 && argc == 3) {
         compile(argv[2]);
+        printf("\nCompile completed");
+    } else if (strcmp(argv[1], "--run") == 0 && argc == 3)
+        executeJava(argv[2]);
     else if (argc == 2) 
-        execute(argv);
+        execute(argv[1]);
     else {
-        printf("use:\n\tjv [-c -j] <Class name> <Jar name>\n\n");
-        printf("-j -> compile the code in the temp folder and generate the .jar executable\n");
-        printf("-c -> compile the code in the temp folder\n\n");
-        printf("jv [--new] <project's name>\n\n");
-        printf("\t--new -> generate a new java project");
+        printf("\nError: No arguments provided.\n");
+        usage();
     }
     return 0;
 }
 
-void execute(char** argv) {
+void execute(char* fileName) {
     char command[100];
-    createDir("temp");
-    compile(argv[1]);
-    sprintf(command, "java -cp build %s", argv[1]);
-    system(command);
+    createDir(BUILDDIR);
+    compile(fileName);
+    sprintf(command, EXECUTE_CMD, BUILDDIR, fileName);
+    if (system(command) == -1)
+        printf("\nSuggestion: Make sure you enter valid file names\n");
+    printf("\nExecute completed");
 }
 
-void compileJava(char** argv) {
-    char comand_jar[100];
-    createDir("temp");
-    compile(argv[2]);
-    sprintf(comand_jar, "jar cvfm bin%s%s.jar manifest.mf -C build .", SEPARATOR, argv[3], SEPARATOR);
-    system(comand_jar);
+void compileJava(char* jarName, char* className) {
+    char command_jar[100];
+    createDir(BUILDDIR);
+    compile(className);
+    sprintf(command_jar, JAR_CMD, BINDIR, SEPARATOR, jarName, BUILDDIR);
+    if (system(command_jar) == -1) 
+        printf("\nSuggestion: Make sure you enter valid file names and that the manifest.mf file exists in the root directory\n");
+    printf("\nCompile Jar completed");
 }
 
 void compile(char *classFile) {
-    char comand_compile[100];
-    createDir("build");
-    sprintf(comand_compile, "javac -d build -cp . src%s*.java src%s%s.java", SEPARATOR, SEPARATOR, classFile);
-    system(comand_compile);
+    char command_compile[100];
+    createDir(BUILDDIR);
+    sprintf(command_compile, COMPILE_CMD, BUILDDIR, SEPARATOR, SEPARATOR, classFile); 
+    if (system(command_compile) == -1) 
+        printf("\nSuggestion: Make sure you enter valid file names\n");
 }
 
-void createDir(char *fileName) {
-    if (access(fileName, F_OK) == 0) {
+void executeJava(char* jarName) {
+    char command_jar[100];
+    sprintf(command_jar, JAR_EXECUTE_CMD, BINDIR, SEPARATOR, jarName);
+    if (system(command_jar) == -1) 
+        printf("\nSuggestion: Make sure you enter valid file names\n");
+    printf("\nExecuted Jar completed");
+}
+
+void createDir(char *dirName) {
+    if (access(dirName, F_OK) != 0) {
         #ifdef _WIN32
-        mkdir(fileName);
+            _mkdir(dirName);
         #else
-        mkdir(fileName, 0777);
+            mkdir(dirName, 0777);
         #endif
     }
+}
+
+void createFile(char *command,char *content) {
+    FILE *file = fopen(command, "w");
+    if (file == NULL) {
+        printf("Error creating files\n");
+        exit(-1);
+    }
+    fprintf(file, content);
+    fclose(file);
 }
 
 int createProject(char *projectName) {
     char command[100];
 
-    #ifdef _WIN32
-        mkdir(projectName);
-        sprintf(command, "%s\\src", projectName);
-        mkdir(command);
-        sprintf(command, "%s\\build", projectName);
-        mkdir(command);
-        sprintf(command, "%s\\bin", projectName);
-        mkdir(command);
-        sprintf(command, "%s\\src\\Main.java", projectName);
-    #else
-        mkdir(projectName, 0777);
-        sprintf(command, "%s/src", projectName);
-        mkdir(command, 0777);
-        sprintf(command, "%s/build", projectName);
-        mkdir(command, 0777);
-        sprintf(command, "%s/bin", projectName);
-        mkdir(command, 0777);
-        sprintf(command, "%s/src/Main.java", projectName);
-    #endif
+    createDir(projectName);
+    sprintf(command, "%s%ssrc", projectName, SEPARATOR);
+    createDir(command);
+    sprintf(command, "%s%s%s", projectName, SEPARATOR, BUILDDIR);
+    createDir(command);
+    sprintf(command, "%s%s%s", projectName, SEPARATOR, BINDIR);
+    createDir(command);
 
-    FILE *file = fopen(command, "w");
-    if (file == NULL) {
-        printf("Error creating Main.java\n");
-        return -1;
-    }
-    fclose(file);
+    sprintf(command, "%s%ssrc%sMain.java", projectName, SEPARATOR, SEPARATOR);
+    createFile(command, "public class Main {\n\tpublic static void main(String[] args) {\n\t\tSystem.out.println(\"Hello\");\n\t}\n}");
+    sprintf(command, "%s%smanifest.mf", projectName, SEPARATOR);
+    createFile(command, "Main-Class: Main\nClass-Path: .");
 
-    printf("%s created successfully.\n", projectName);
+    printf("\n%s created successfully.\n", projectName);
     return 0;
+}
+
+void usage() {
+    printf("\nUsage:\n\tjv [-c -j] <Class name> <Jar name>\n\n");
+    printf("-j -> compile the code in the build folder and generate the .jar executable\n");
+    printf("-c -> compile the code in the build folder\n\n");
+    printf("jv [--new --run] <project's name or .jar name>\n\n");
+    printf("\t--new -> generate a new java project");
+    printf("\t--run -> runs the specified .jar file");
 }
