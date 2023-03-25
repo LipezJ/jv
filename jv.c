@@ -5,14 +5,15 @@
 
 #ifdef _WIN32
 #define SEPARATOR "\\"
+#define COMPILE_CMD "javac -d %s -cp .%ssrc src%s*.java src%s%s.java"
 #else
 #define SEPARATOR "/"
+#define COMPILE_CMD "javac -d %s -cp . src%s**%s*.java src%s%s.java"
 #endif
 
 #define BUILDDIR "build"
 #define BINDIR "bin"
 
-#define COMPILE_CMD "javac -d %s -cp . src%s*.java src%s%s.java"
 #define EXECUTE_CMD "java -cp %s %s"
 #define JAR_CMD "jar cvfm %s%s%s.jar manifest.mf -C %s ."
 #define JAR_EXECUTE_CMD "java -jar %s%s%s.jar"
@@ -65,10 +66,10 @@ void compileJava(char* jarName, char* className) {
     printf("\nCompile Jar completed");
 }
 
-void compile(char *classFile) {
+void  compile(char *classFile) {
     char command_compile[100];
     createDir(BUILDDIR);
-    sprintf(command_compile, COMPILE_CMD, BUILDDIR, SEPARATOR, SEPARATOR, classFile); 
+    sprintf(command_compile, COMPILE_CMD, BUILDDIR, SEPARATOR, SEPARATOR, SEPARATOR, classFile);
     if (system(command_compile) == -1) 
         printf("\nSuggestion: Make sure you enter valid file names\n");
 }
