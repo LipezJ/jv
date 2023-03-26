@@ -24,6 +24,7 @@ jv provides several commands for automating Java project setup, compilation, and
       └── src/
           └── Main.java
     ```
+- ```jv <class_name>``` Compiles and runs the specified class. 
 - ```jv -c <class_name>``` Compiles the specified Java file and generates a .class file in the build folder. 
 - ```jv -j <jar_name> <class_name>``` Compiles the specified Java file and generates an executable .jar file in the bin folder.
 - ```jv --run <file_name>``` Runs the specified Java file or .jar file.
