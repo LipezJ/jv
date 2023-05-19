@@ -28,6 +28,15 @@ void createDir(char *dirName);
 void createFile(char *command,char *content);
 
 int main(int argc, char** argv) {
+
+    if (strcmp(argv[1], "-help") == 0 || strcmp(argv[1], "-h") == 0 && argc == 2) {
+        usage();
+        return 0;
+    } else if (argc < 3) {
+        printf("\nSuggestion: Use -help or -h to see the usage\n");
+        return 0;
+    }
+
     if (strcmp(argv[1], "--new") == 0 && argc == 3)
         createProject(argv[2]);
     else if (strcmp(argv[1], "-j") == 0 && argc == 4) 
@@ -39,10 +48,7 @@ int main(int argc, char** argv) {
         executeJava(argv[2]);
     else if (argc == 2) 
         execute(argv[1]);
-    else {
-        printf("\nError: No arguments provided.\n");
-        usage();
-    }
+    
     return 0;
 }
 
@@ -124,9 +130,10 @@ int createProject(char *projectName) {
 
 void usage() {
     printf("\nUsage:\n\tjv [-c -j] <Class name> <Jar name>\n\n");
-    printf("-j -> compile the code in the build folder and generate the .jar executable\n");
-    printf("-c -> compile the code in the build folder\n\n");
-    printf("jv [--new --run] <project's name or .jar name>\n\n");
-    printf("\t--new -> generate a new java project");
-    printf("\t--run -> runs the specified .jar file");
+    printf("\t\t-j -> compile the code in the build folder and generate the .jar executable\n");
+    printf("\t\t-c -> compile the code in the build folder\n\n");
+    printf("\tjv [--new --run] <project's name or .jar name>\n\n");
+    printf("\t\t--new -> generate a new java project\n");
+    printf("\t\t--run -> runs the specified .jar file\n\n");
+    printf("\tjv -help or jv -h -> show this help\n");
 }
